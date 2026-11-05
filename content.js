@@ -3,6 +3,7 @@ let panel = null;
 let goalInput = null;
 let timerEl = null;
 let timerId = null;
+let heartbeatId = null;
 
 function formatTime(ms) {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -10,6 +11,26 @@ function formatTime(ms) {
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
   return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
+}
+
+function beat() {
+  try {
+    chrome.storage.local.set({ lastActive: Date.now() });
+  } catch {
+    // extension was reloaded; this tab's script is orphaned
+    clearInterval(heartbeatId);
+  }
+}
+
+function startHeartbeat() {
+  if (heartbeatId) return;
+  beat();
+  heartbeatId = setInterval(beat, 30000);
+}
+
+function stopHeartbeat() {
+  clearInterval(heartbeatId);
+  heartbeatId = null;
 }
 
 function buildPanel() {
@@ -51,12 +72,13 @@ function render({ studyMode, goal, sessionStart, hide }) {
   root.classList.toggle("nagi-hide-shorts", !!studyMode && opts.shorts);
   root.classList.toggle("nagi-hide-suggestions", !!studyMode && opts.suggestions);
 
-
   if (!studyMode) {
+    stopHeartbeat();
     removePanel();
     return;
   }
 
+  startHeartbeat();
   if (!panel) buildPanel();
   if (document.activeElement !== goalInput) goalInput.value = goal || "";
 
@@ -75,4 +97,10 @@ function refresh() {
 }
 
 refresh();
-chrome.storage.onChanged.addListener(refresh);
+
+// only re-render when something we display actually changed;
+// otherwise every heartbeat write would trigger a refresh in every tab
+chrome.storage.onChanged.addListener((changes) => {
+  const relevant = ["studyMode", "goal", "sessionStart", "hide"];
+  if (relevant.some((key) => key in changes)) refresh();
+});
