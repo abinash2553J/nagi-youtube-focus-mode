@@ -1,14 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Nagi: YouTube Focus Mode",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Calm the noise. Hides Shorts, feed and suggestions while you study.",
+  "permissions": ["storage"],
+  "action": { "default_title": "Toggle study mode" },
+  "background": { "service_worker": "background.js" },
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
       "css": ["nagi.css"],
       "js": ["content.js"],
-      "permissions": ["storage"],
       "run_at": "document_start"
     }
   ]
