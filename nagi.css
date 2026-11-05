@@ -1,0 +1,23 @@
+/* Everything is scoped to html.nagi-on, so removing the class restores YouTube */
+
+/* Home feed */
+html.nagi-on ytd-browse[page-subtype="home"] ytd-rich-grid-renderer {
+  display: none !important;
+}
+
+/* Shorts shelves inside feeds and search */
+html.nagi-on ytd-reel-shelf-renderer,
+html.nagi-on ytd-rich-shelf-renderer[is-shorts] {
+  display: none !important;
+}
+
+/* Shorts button in the sidebar (expanded and mini) */
+html.nagi-on ytd-guide-entry-renderer:has(a[title="Shorts"]),
+html.nagi-on ytd-mini-guide-entry-renderer[aria-label="Shorts"] {
+  display: none !important;
+}
+
+/* Suggested videos next to the player */
+html.nagi-on ytd-watch-flexy #secondary {
+  display: none !important;
+}
