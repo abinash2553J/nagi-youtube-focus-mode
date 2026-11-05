@@ -36,10 +36,11 @@ workers go idle, so nothing is counted in memory. Nagi stores a `sessionStart`
 timestamp in `chrome.storage.local` and computes elapsed time from it on every tick.
 
 **Forgotten sessions end honestly.** While study mode is on and a YouTube tab is open,
-the page writes a `lastActive` heartbeat every 30 seconds. If a session is closed after
-the heartbeat has gone stale (for example, you left it on overnight), it ends at the
-last heartbeat instead of recording hours of phantom focus time. Stale sessions are also
-closed when the browser starts.
+the page sends a heartbeat request every 30 seconds. The background worker records it only
+while the session is fresh. If a session
+is closed after the heartbeat has gone stale (for example, you left it on overnight), it
+ends at the last heartbeat instead of recording hours of phantom focus time. A stale
+session is also closed when the browser starts or a YouTube tab is opened again.
 
 **The report** splits each session across the days it overlaps, so a session that
 crosses midnight is counted correctly on both days.

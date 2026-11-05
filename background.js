@@ -1,5 +1,12 @@
 const MAX_SESSIONS = 500;
 const STALE_MS = 3 * 60 * 1000; // heartbeat is every 30s; background tabs get throttled
+let sessionQueue = Promise.resolve();
+
+function enqueueSessionTask(task) {
+  const result = sessionQueue.then(task);
+  sessionQueue = result.catch((error) => console.error("Nagi session update failed", error));
+  return result;
+}
 
 async function syncBadge() {
   const { studyMode = false } = await chrome.storage.local.get("studyMode");
@@ -34,10 +41,12 @@ async function closeStaleSession() {
     await chrome.storage.local.get(["studyMode", "lastActive"]);
   if (studyMode && (!lastActive || Date.now() - lastActive > STALE_MS)) {
     await finishSession();
+    return true;
   }
+  return false;
 }
 
-chrome.action.onClicked.addListener(async () => {
+chrome.action.onClicked.addListener(() => enqueueSessionTask(async () => {
   const { studyMode = false } = await chrome.storage.local.get("studyMode");
 
   if (studyMode) {
@@ -50,12 +59,43 @@ chrome.action.onClicked.addListener(async () => {
       lastActive: now,
     });
   }
-  syncBadge();
+  await syncBadge();
+}));
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type === "nagi-setting") {
+    if (!["feed", "shorts", "suggestions"].includes(message.id) || typeof message.checked !== "boolean") {
+      return;
+    }
+
+    const result = enqueueSessionTask(async () => {
+      const { hide = {} } = await chrome.storage.local.get("hide");
+      await chrome.storage.local.set({ hide: { ...hide, [message.id]: message.checked } });
+    });
+    result.then(
+      () => sendResponse({}),
+      (error) => sendResponse({ error: error.message })
+    );
+    return true;
+  }
+
+  if (message?.type !== "nagi-heartbeat" || !sender.tab?.url?.startsWith("https://www.youtube.com/")) return;
+
+  const result = enqueueSessionTask(async () => {
+    if (await closeStaleSession()) return;
+    const { studyMode } = await chrome.storage.local.get("studyMode");
+    if (studyMode) await chrome.storage.local.set({ lastActive: Date.now() });
+  });
+  result.then(
+    () => sendResponse({}),
+    (error) => sendResponse({ error: error.message })
+  );
+  return true;
 });
 
-chrome.runtime.onStartup.addListener(async () => {
+chrome.runtime.onStartup.addListener(() => enqueueSessionTask(async () => {
   await closeStaleSession(); // closes yesterday's forgotten session on browser start
-  syncBadge();
-});
+  await syncBadge();
+}));
 
 chrome.runtime.onInstalled.addListener(syncBadge);

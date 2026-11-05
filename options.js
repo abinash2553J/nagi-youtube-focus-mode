@@ -10,11 +10,17 @@ async function load() {
 }
 
 ids.forEach((id) => {
-  document.getElementById(id).addEventListener("change", async (e) => {
-    const { hide } = await chrome.storage.local.get("hide");
-    await chrome.storage.local.set({
-      hide: { ...DEFAULTS, ...hide, [id]: e.target.checked },
-    });
+  document.getElementById(id).addEventListener("change", (e) => {
+    chrome.runtime.sendMessage({
+      type: "nagi-setting",
+      id,
+      checked: e.target.checked,
+    }).then(
+      (response) => {
+        if (response?.error) console.error("Could not save Nagi settings", response.error);
+      },
+      (error) => console.error("Could not save Nagi settings", error)
+    );
   });
 });
 

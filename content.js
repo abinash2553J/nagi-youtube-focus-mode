@@ -14,12 +14,11 @@ function formatTime(ms) {
 }
 
 function beat() {
-  try {
-    chrome.storage.local.set({ lastActive: Date.now() });
-  } catch {
-    // extension was reloaded; this tab's script is orphaned
+  chrome.runtime.sendMessage({ type: "nagi-heartbeat" }).catch((error) => {
+    console.error("Nagi heartbeat failed", error);
     clearInterval(heartbeatId);
-  }
+    heartbeatId = null;
+  });
 }
 
 function startHeartbeat() {
