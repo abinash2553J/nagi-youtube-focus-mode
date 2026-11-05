@@ -18,7 +18,7 @@ function lastSevenDays() {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - i);
-    days.push({ date: d, key: d.toDateString(), minutes: 0 });
+    days.push({ date: d, minutes: 0 });
   }
   return days;
 }
@@ -26,13 +26,22 @@ function lastSevenDays() {
 async function main() {
   const { sessions = [] } = await chrome.storage.local.get("sessions");
   const days = lastSevenDays();
-  const byKey = new Map(days.map((d) => [d.key, d]));
   const weekStart = days[0].date.getTime();
 
-  const week = sessions.filter((s) => s.start >= weekStart);
-  for (const s of week) {
-    const day = byKey.get(new Date(s.start).toDateString());
-    if (day) day.minutes += (s.end - s.start) / 60000;
+  // keep any session that ended inside the 7-day window
+  const week = sessions.filter((s) => s.end > weekStart);
+
+  // add each session's overlap with each day, so midnight-crossing sessions split correctly
+  for (const day of days) {
+    const dayStart = day.date.getTime();
+    const next = new Date(day.date);
+    next.setDate(next.getDate() + 1);
+    const dayEnd = next.getTime();
+
+    for (const s of week) {
+      const overlap = Math.min(s.end, dayEnd) - Math.max(s.start, dayStart);
+      if (overlap > 0) day.minutes += overlap / 60000;
+    }
   }
 
   // stats
