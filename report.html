@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Nagi: weekly focus report</title>
+  <style>
+    body { font: 16px system-ui, sans-serif; max-width: 560px; margin: 40px auto; color: #16372b; }
+    .stats { display: flex; gap: 12px; margin: 20px 0; }
+    .stat { flex: 1; padding: 12px; background: #eef2ea; border-radius: 10px; }
+    .stat b { display: block; font-size: 22px; }
+    .row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+    .label { width: 90px; font-size: 14px; }
+    .track { flex: 1; background: #eef2ea; border-radius: 6px; height: 18px; }
+    .bar { height: 100%; background: #2f6b4f; border-radius: 6px; min-width: 0; }
+    .value { width: 64px; text-align: right; font-size: 14px; }
+    h2 { margin-top: 32px; font-size: 18px; }
+    li { margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <h1>凪 This week with Nagi</h1>
+  <div class="stats" id="stats"></div>
+  <div id="chart"></div>
+  <h2>Recent sessions</h2>
+  <ul id="recent"></ul>
+  <p><a href="options.html">Settings</a></p>
+  <script src="report.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+function formatMinutes(min) {
+  const h = Math.floor(min / 60);
+  const m = Math.round(min % 60);
+  return h ? `${h}h ${m}m` : `${m}m`;
+}
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text; // never innerHTML: goals are user text
+  return node;
+}
+
+function lastSevenDays() {
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - i);
+    days.push({ date: d, key: d.toDateString(), minutes: 0 });
+  }
+  return days;
+}
+
+async function main() {
+  const { sessions = [] } = await chrome.storage.local.get("sessions");
+  const days = lastSevenDays();
+  const byKey = new Map(days.map((d) => [d.key, d]));
+  const weekStart = days[0].date.getTime();
+
+  const week = sessions.filter((s) => s.start >= weekStart);
+  for (const s of week) {
+    const day = byKey.get(new Date(s.start).toDateString());
+    if (day) day.minutes += (s.end - s.start) / 60000;
+  }
+
+  // stats
+  const total = days.reduce((sum, d) => sum + d.minutes, 0);
+  const longest = Math.max(0, ...week.map((s) => (s.end - s.start) / 60000));
+  const stats = document.getElementById("stats");
+  [
+    ["Focus time", formatMinutes(total)],
+    ["Sessions", String(week.length)],
+    ["Longest", formatMinutes(longest)],
+  ].forEach(([label, value]) => {
+    const box = el("div", "stat");
+    box.append(el("b", "", value), el("span", "", label));
+    stats.appendChild(box);
+  });
+
+  // bars
+  const max = Math.max(1, ...days.map((d) => d.minutes));
+  const chart = document.getElementById("chart");
+  for (const d of days) {
+    const row = el("div", "row");
+    const track = el("div", "track");
+    const bar = el("div", "bar");
+    bar.style.width = `${(d.minutes / max) * 100}%`;
+    track.appendChild(bar);
+    row.append(
+      el("span", "label", d.date.toLocaleDateString(undefined, { weekday: "short", day: "numeric" })),
+      track,
+      el("span", "value", d.minutes ? formatMinutes(d.minutes) : "-")
+    );
+    chart.appendChild(row);
+  }
+
+  // recent sessions
+  const recent = document.getElementById("recent");
+  if (!week.length) recent.appendChild(el("li", "", "No sessions yet. Turn on study mode to start one."));
+  [...week].reverse().slice(0, 8).forEach((s) => {
+    const when = new Date(s.start).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" });
+    recent.appendChild(el("li", "", `${when}: ${s.goal || "(no goal)"} · ${formatMinutes((s.end - s.start) / 60000)}`));
+  });
+}
+
+main();
