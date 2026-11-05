@@ -8,6 +8,7 @@
       "matches": ["https://www.youtube.com/*"],
       "css": ["nagi.css"],
       "js": ["content.js"],
+      "permissions": ["storage"],
       "run_at": "document_start"
     }
   ]
