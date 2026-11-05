@@ -31,7 +31,12 @@ html.nagi-hide-suggestions ytd-watch-flexy #secondary {
   font: 14px system-ui, sans-serif;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
-#nagi-panel .nagi-title { font-weight: 600; margin-bottom: 8px; }
+#nagi-panel .nagi-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-family: "Yu Gothic", "Meiryo", "Noto Sans JP", system-ui, sans-serif;
+}
+
 #nagi-panel input {
   width: 100%;
   box-sizing: border-box;
@@ -45,4 +50,12 @@ html.nagi-hide-suggestions ytd-watch-flexy #secondary {
   margin-top: 8px;
   font: 22px ui-monospace, monospace;
   text-align: center;
+}
+html.nagi-hide-feed ytd-browse[page-subtype="home"]::before {
+  content: "Study mode is on. Go build something.";
+  display: block;
+  margin-top: 30vh;
+  text-align: center;
+  font-size: 24px;
+  color: #888;
 }
