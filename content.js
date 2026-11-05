@@ -44,8 +44,13 @@ function removePanel() {
   panel = goalInput = timerEl = null;
 }
 
-function render({ studyMode, goal, sessionStart }) {
+function render({ studyMode, goal, sessionStart, hide }) {
+  const opts = { feed: true, shorts: true, suggestions: true, ...hide };
   root.classList.toggle("nagi-on", !!studyMode);
+  root.classList.toggle("nagi-hide-feed", !!studyMode && opts.feed);
+  root.classList.toggle("nagi-hide-shorts", !!studyMode && opts.shorts);
+  root.classList.toggle("nagi-hide-suggestions", !!studyMode && opts.suggestions);
+
 
   if (!studyMode) {
     removePanel();
@@ -65,7 +70,7 @@ function render({ studyMode, goal, sessionStart }) {
 
 function refresh() {
   chrome.storage.local
-    .get(["studyMode", "goal", "sessionStart"])
+    .get(["studyMode", "goal", "sessionStart", "hide"])
     .then(render);
 }
 
